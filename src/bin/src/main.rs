@@ -1,5 +1,5 @@
-use mapmaker;
+use sputnik;
 
 fn main() {
-    mapmaker::run();
+    sputnik::run();
 }
