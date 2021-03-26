@@ -28,7 +28,7 @@ impl<'a> Sitemap<'a> {
         sitemap
     }
 
-    fn discover(base_url: &str, link: &String) -> Vec<String> {
+    fn discover(base_url: &str, link: &String) -> HashSet<String> {
         let response = requests::get(Sitemap::build_url(base_url, link)).unwrap();
         let document = Html::parse_document(response.text().unwrap());
         let selector = Selector::parse("a").unwrap();
@@ -36,17 +36,14 @@ impl<'a> Sitemap<'a> {
         let anchors = document.select(&selector);
 
         anchors.filter_map(|anchor| {
-            match anchor.value().attr("href") {
-                Some(href) => {
-                    if Sitemap::is_internal_http_link(base_url, href) {
-                        Some(href.to_string())
-                    } else {
-                        None
-                    }
-                },
-                None => None
+            if let Some(href) = anchor.value().attr("href") {
+                if Sitemap::is_internal_http_link(base_url, href) {
+                    return Some(href.to_string());
+                }
             }
-        }).collect()
+
+            return None;
+        }).collect::<HashSet<String>>()
     }
 
     fn is_external_link(base_url: &str, link: &str) -> bool {
