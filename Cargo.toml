@@ -1,5 +1,5 @@
 [package]
-name = "mapmaker"
+name = "sputnik"
 version = "0.1.0"
 authors = ["juripetersen <juri@hey.com>"]
 edition = "2018"
@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 requests = "*"
 scraper = "*"
+async-std = "*"

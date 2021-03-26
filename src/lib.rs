@@ -1,9 +1,11 @@
 use requests;
 use scraper::{Html, Selector};
 use std::collections::HashSet;
+use async_std::task;
+use std::future::Future;
 
 pub fn run() {
-    println!("Hello Mapmaker");
+    println!("Hello Sputnik");
     let sitemap = Sitemap::new("https://www.test.de");
     println!("{:?}", sitemap.links);
 }
@@ -11,17 +13,54 @@ pub fn run() {
 struct Sitemap<'a> {
     base_url: &'a str,
     links: HashSet<String>,
+    queue: Vec<String>,
 }
 
 impl<'a> Sitemap<'a> {
     pub fn new(base_url: &'a str) -> Sitemap {
         let mut sitemap = Sitemap {
             base_url,
-            links: HashSet::new()
+            links: HashSet::new(),
+            queue: Vec::new(),
         };
 
-        sitemap.follow(&String::from(base_url));
+        sitemap.queue.push(sitemap.base_url.to_string());
+        task::block_on(sitemap.discover_queued_links());
         sitemap
+    }
+
+    async fn discover_queued_links(&mut self) {
+        let mut handles = Vec::new();
+
+        while self.queue.len() > 0 {
+            let link = self.queue.pop().unwrap();
+            if !self.links.contains(&link) {
+                self.links.insert(link.clone());
+                handles.push(Sitemap::follow(link));
+            }
+        }
+
+        let mut results  = Vec::new();
+
+        for handle in handles {
+            results.push(handle.await.unwrap());
+        }
+
+        for links in results {
+            for link in links {
+                if !self.links.contains(&link) && !self.queue.contains(&link) {
+                    self.queue.push(link);
+                }
+            }
+        }
+
+        if self.queue.len() > 0 {
+            self.discover_queued_links().await;
+        }
+    }
+
+    async fn follow(link: String) -> Result<Vec<String>, ()> {
+        Ok(vec![String::from(link)])
     }
 
     fn is_external_link(&self, link: &str) -> bool {
@@ -43,7 +82,7 @@ impl<'a> Sitemap<'a> {
         }
     }
 
-    fn follow(&mut self, link: &String) {
+    /*fn follow(&mut self, link: &String) {
         let response = requests::get(self.build_url(link)).unwrap();
         let document = Html::parse_document(response.text().unwrap());
         let selector = Selector::parse("a").unwrap();
@@ -61,5 +100,5 @@ impl<'a> Sitemap<'a> {
                 }
             }
         }
-   }
+   }*/
 }
