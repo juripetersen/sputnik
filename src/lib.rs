@@ -23,8 +23,10 @@ impl<'a> Sitemap<'a> {
             links: HashSet::new()
         };
 
-        let links = Sitemap::discover(base_url, &base_url.to_string());
-        println!("{:?}", links);
+        sitemap.links = Sitemap::discover(base_url, &base_url.to_string())
+                        .symmetric_difference(&sitemap.links)
+                        .map(|link| link.to_string())
+                        .collect();
         sitemap
     }
 
