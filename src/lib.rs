@@ -9,7 +9,7 @@ use async_recursion::async_recursion;
 
 pub fn run() {
     println!("Hello Sputnik");
-    let sitemap = Sitemap::new("https://www.web-wikinger.de");
+    let sitemap = Sitemap::new("https://www.test.de");
     println!("{:?}", sitemap.links);
     println!("Found {:?} links", sitemap.links.len());
 }
