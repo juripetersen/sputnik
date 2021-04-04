@@ -2,14 +2,11 @@ use requests;
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use async_std::task;
-use futures::future::{BoxFuture, FutureExt};
 use async_recursion::async_recursion;
-
-
 
 pub fn run() {
     println!("Hello Sputnik");
-    let sitemap = Sitemap::new("https://www.test.de");
+    let sitemap = Sitemap::new("https://www.visuellverstehen.de/");
     println!("{:?}", sitemap.links);
     println!("Found {:?} links", sitemap.links.len());
 }
@@ -72,6 +69,8 @@ impl Sitemap {
             if let Some(href) = anchor.value().attr("href") {
                 if Sitemap::is_internal_http_link(base_url, href) {
                     return Some(href.to_string());
+                } else {
+                    println!("{:?} is filtered out", href);
                 }
             }
 
@@ -80,7 +79,7 @@ impl Sitemap {
     }
 
     fn is_external_link(base_url: &'static str, link: &str) -> bool {
-        (link.contains("http") || link.contains("https")) && !link.contains(base_url)
+        (link.contains("http://") || link.contains("https://")) && !link.contains(base_url)
     }
 
     fn is_internal_http_link(base_url: &'static str, link: &str) -> bool {
